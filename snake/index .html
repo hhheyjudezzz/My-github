@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>贪吃蛇</title>
+	<style type="text/css">
+		*{
+			padding: 0;
+			margin: 0;
+		}
+		#wrap{
+			width: 300px;
+			height: 300px;
+			border:1px solid skyblue;
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			margin:auto;
+			background:url(bg.png) 0 0 repeat;
+		}
+		#snake{
+			position: absolute;
+			top: 0;
+			left: 0;
+			background-color: rgba(255,0,0,0.75);
+			width: 15px;
+			height: 15px;
+		}
+		#food{
+			position: absolute;
+			top: 45px;
+			left: 45px;
+			background-color: rgba(33, 150, 243, 0.7);
+			width: 15px;
+			height: 15px;
+		}
+		.snakeBody{
+			background-color:rgba(96, 125, 139, 0.46);
+			width: 15px;
+			height: 15px;
+			position: absolute; 
+		}
+
+	</style>
+</head>
+<body>
+	<div id="wrap">
+		<div id="snake"></div>
+		<div id="food"></div>
+	</div>
+</body>
+<script type="text/javascript">
+	var wrap=document.getElementById('wrap');
+	var snake = document.getElementById('snake');
+	var food = document.getElementById('food');
+	var snakeMoveTime= null;
+	var v= 15;
+	//控制方向的掉头
+	var topBoolean = true;
+	var leftBoolean = true;
+	//是否吃到食物
+	var foodBoolean=false;
+	//控制同一时间蛇身只移动一次,不能反复点击
+	var moveBoolean = false;
+	//数组保存蛇身
+	var snakeBodyArr=[];
+	//蛇身长度
+	var n=0;
+	var v=15;
+	//控制蛇头
+	document.onkeydown=function(){
+		if(moveBoolean){
+			return;
+		}
+		moveBoolean=true;
+		var e =e||window.event;
+		// console.log(e.keyCode);
+		//横向移动
+		if(e.keyCode==37&&topBoolean == true){
+			clearInterval(snakeMoveTime);
+			snakeBodyFn();
+			snake.style.left=snake.offsetLeft-15+"px"
+			// n=1;
+			//控制方向掉头
+			topBoolean =false;
+			leftBoolean = true
+			allSnakeMoveFn("left","offsetLeft",-v)
+		}
+		//右键
+		if(e.keyCode==39&&topBoolean == true){
+			clearInterval(snakeMoveTime);
+			snakeBodyFn();
+			snake.style.left=snake.offsetLeft+15+"px"
+			topBoolean =false;
+			leftBoolean = true;
+			allSnakeMoveFn("left","offsetLeft",v)
+		}
+		//纵向移动
+		if(e.keyCode==38&&leftBoolean == true){
+			clearInterval(snakeMoveTime);
+			snakeBodyFn();
+			snake.style.top=snake.offsetTop-15+"px"
+			leftBoolean =false;
+			topBoolean = true;
+			allSnakeMoveFn("top","offsetTop",-v)
+		}
+		//下键
+		if(e.keyCode==40&&leftBoolean == true){
+			clearInterval(snakeMoveTime);
+			snakeBodyFn();
+			snake.style.top=snake.offsetTop+15+"px"
+			leftBoolean =false;
+			topBoolean = true;
+			allSnakeMoveFn("top","offsetTop",v)
+		}	
+	}
+	//控制食物
+		//一行格子数量
+	var cubicNumber=wrap.clientHeight/15;
+	var allSnakeArr=[];
+	allSnakeArr[0]=snake;
+	//随机出格子的坐标
+	function foodRandomPosition(){
+		var foodRandomTop=15*parseInt(Math.random()*cubicNumber);
+		var foodRandomLeft=15*parseInt(Math.random()*cubicNumber);
+		//随机食物位置并不和蛇位置重叠
+			//------注意，要加break，不然会继续for循环，能够执行到改变位置的代码
+		for(var i =0;i<allSnakeArr.length;i++){
+			if(foodRandomTop==allSnakeArr[i].offsetTop&&foodRandomLeft==allSnakeArr[i].offsetLeft){
+				foodRandomPosition();
+				console.log(1)
+				break;
+			}else{
+				food.style.top=foodRandomTop+"px"
+				food.style.left=foodRandomLeft+"px"
+			}
+		}
+	}
+	//初始给蛇头和食物坐标
+	snake.style.left=15*parseInt(Math.random()*cubicNumber)+"px"
+	snake.style.top=15*parseInt(Math.random()*cubicNumber)+"px"
+	foodRandomPosition();
+	//判断蛇头碰到食物 
+	function foodTimeFn(){
+		var foodTime=setInterval(function(){
+			if(food.offsetTop==snake.offsetTop&&food.offsetLeft==snake.offsetLeft){
+				food.style.display="none";
+				foodBoolean=true;
+				//创建蛇身
+				var snakeBody= document.createElement("div");
+				wrap.appendChild(snakeBody);
+				//将创建的snakeBody存入数组
+				snakeBodyArr[snakeBodyArr.length]=snakeBody;
+				allSnakeArr[snakeBodyArr.length]=snakeBody;
+				//记录蛇身长度
+				 // n=snakeBodyArr.length;	
+				 //改变蛇身
+				 // snakeBodyFn();	
+				//再次出现food
+				setTimeout(function(){
+					foodRandomPosition();
+					food.style.display="block";
+				},600)
+			}
+		},300)
+	}
+	//蛇身改变
+	function snakeBodyFn(){
+		/*if(n==0){
+			n=snakeBodyArr.length;
+		}
+		if(foodBoolean==true){
+			snakeBodyArr[n-1].style.top=snake.offsetTop+"px";
+			snakeBodyArr[n-1].style.left=snake.offsetLeft+"px";
+			n-=1;
+		}*/
+		// 完善解决吃到食物不立即增加蛇身
+		if(foodBoolean==true){
+			// 保存最后一节蛇身添加到蛇头位置前的位置
+			snakeBodyLastTop=snakeBodyArr[snakeBodyArr.length-1].offsetTop
+			snakeBodyLastLeft=snakeBodyArr[snakeBodyArr.length-1].offsetLeft
+			//改变最后一节位置
+			snakeBodyArr[snakeBodyArr.length-1].style.top=snake.offsetTop+"px";
+			snakeBodyArr[snakeBodyArr.length-1].style.left=snake.offsetLeft+"px";
+			snakeBodyArr[snakeBodyArr.length-1].setAttribute("class","snakeBody");
+			snakeBodyArr.splice(0,0,snakeBodyArr.pop());
+		}
+	}
+	//封装函数 结束游戏
+	function snakeGomeover(){
+		clearInterval(snakeMoveTime);
+		topBoolean =false;
+		leftBoolean =false;
+	}
+	//判断是否碰到自己
+	function snakeEatself(){
+		for(var i =0;i<snakeBodyArr.length;i++){
+			if(snake.offsetTop==snakeBodyArr[i].offsetTop&&snake.offsetLeft==snakeBodyArr[i].offsetLeft){
+				snakeGomeover();
+				allSnakeBack();
+			}
+		}
+	}
+	//蛇整体移动封装函数
+	function allSnakeMoveFn(side,offset,v){	
+		snakeMoveTime=setInterval(function(){
+			foodTimeFn();
+			snakeBodyFn();
+			snake.style[side]=snake[offset]+v+"px"
+			//蛇头位置改变后判断是否碰撞自己
+			snakeEatself();
+			//判断碰壁
+			if(snake.offsetLeft<0){
+				snake.style.left=0;
+				snakeGomeover();
+				allSnakeBack();
+			}
+			if(snake.offsetLeft>wrap.clientWidth-15){
+				snake.style.left=wrap.clientWidth-15+"px";
+				snakeGomeover();
+				allSnakeBack();
+			}
+			if(snake.offsetTop<0){
+				snake.style.top=0+"px";
+				snakeGomeover();
+				allSnakeBack();
+			}
+			if(snake.offsetTop>wrap.clientHeight-15){
+				snake.style.top=wrap.clientHeight-15+"px";
+				snakeGomeover();
+				allSnakeBack();
+			}
+			moveBoolean=false;
+		},300)
+	}
+	// 蛇身 回退一步,需要保存最后一节蛇身添加到蛇头位置前的位置
+	var snakeBodyLastTop,snakeBodyLastLeft; //声明变量
+	function allSnakeBack(){
+		//蛇头回位
+		snake.style.top=snakeBodyArr[0].offsetTop+"px";
+		snake.style.left=snakeBodyArr[0].offsetLeft+"px";
+		//蛇身第一节回位
+		snakeBodyArr[0].style.top=snakeBodyLastTop+"px";
+		snakeBodyArr[0].style.left=snakeBodyLastLeft+"px";
+		/*for(var i =1;i<snakeBodyArr.length;i++){
+			snakeBodyArr[i].style.top=snakeBodyArr[i-1].offsetTop+"px";
+			snakeBodyArr[i].style.left=snakeBodyArr[i-1].offsetLeft+"px";
+		}*/
+	}
+</script>
+</html>
